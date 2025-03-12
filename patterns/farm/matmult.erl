@@ -1,13 +1,20 @@
 -module(matmult).
 -import(lists,[sum/1]).
 -export([matrixmult/2]).
+-export([matrixmult/3]).
 -export([transpose/1]).
 -export([threadmatnobin/0]).
+-export([matdot/2]).
 
-matrixmult(L1,L2) ->	
+matrixmult(L1,L2,NoProcesses) ->
+	StartTime = erlang:timestamp(),
+	farm:farm(L1,fun(X) -> apply(matmult,matdot,[X,transpose(L2)]) end,NoProcesses).
+	%matdot(L1,transpose(L2)).
+	%io:format("Time to complete multiplication: ~w~n", [timeinsecs(StartTime)]).
+
+matrixmult(L1,L2) ->
 	StartTime = erlang:timestamp(),
 	matdot(L1,transpose(L2)).
-	%io:format("Time to complete multiplication: ~w~n", [timeinsecs(StartTime)]).
 
 timeinsecs(StartTime) ->
 	timer:now_diff(erlang:timestamp(),StartTime)/(1*math:pow(10,6)).

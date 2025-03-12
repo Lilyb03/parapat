@@ -1,11 +1,25 @@
 -module(farm).
 -export([farm/3]).
--export([work/0]).
+-export([farm/4]).
+-export([work/0,workSplit/0]).
+-import(lists,[split/2]).
 
 farm(L,Fun,NoProcesses) ->
 	Work = trunc(length(L)/NoProcesses),
 	spawnProcesses(NoProcesses,L,Fun,Work),
 	loop(NoProcesses,[]).
+	
+farm(Data,Fun,Split,NoProcesses) ->
+	Work = Split(Data,NoProcesses),
+	spawnProcesses(NoProcesses,Data,Fun,Split,Work),
+	loop(NoProcesses,[]).
+	
+spawnProcesses(N,Data,Fun,Split,Work) when N > 0 ->
+	Pid = spawn(farm,workSplit,[]),
+	Pid ! {self(),Work,Data,Fun,N},
+	spawnProcesses(N-1,Data,Fun,Split,Work);
+spawnProcesses(0,_,_,_,_) ->
+	[].
 
 spawnProcesses(N,L,Fun,Work) when N > 1 ->
 	LSplit = lists:split(Work,L),
@@ -19,6 +33,7 @@ spawnProcesses(1,L,Fun,_) ->
 loop(N,L) when N > 0 ->
 	receive
 		{Pid,Msg,I} ->
+			io:format("~w~n", [[I]]),
 			CL = lists:append(L,[{Msg,I}])
 	end,
 Pid ! stop,
@@ -40,6 +55,15 @@ work() ->
 		{From, L, Fun, I} ->
 			From ! {self(),Fun(L),I},
 			work();
+		stop ->
+			true
+end.
+
+workSplit() ->
+	receive
+		{From,Work,Data,Fun,I} ->
+			From ! {self(),Fun(Data,Work,I),I},
+			workSplit();
 		stop ->
 			true
 end.

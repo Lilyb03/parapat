@@ -19,15 +19,15 @@ spawnprocesses(0,_,_,_) ->
 		
 loop(N,L,StartTime) when N > 0 ->
 	receive
-		{Pid, Msg, N} ->
-			CL = lists:append(L,[{Msg,N}])
+		{Pid, Msg, I} ->
+			CL = lists:append(L,[{Msg,I}])
 	end,
 Pid ! stop,
 loop(N-1,CL,StartTime);
 
 loop(0,L,StartTime) ->
-	combinelists(tupletolist(lists:keysort(2,L))),
-	io:format("Time to complete multiplication: ~w~n", [timeinsecs(StartTime)]).
+	io:format("Time to complete multiplication: ~w~n", [timeinsecs(StartTime)]),
+	combinelists(tupletolist(lists:reverse(lists:keysort(2,L)))).
 
 tupletolist([H|T]) ->
 	[element(1,H)|tupletolist(T)];

@@ -27,9 +27,8 @@ spawnprocesses(0,_,_,_) ->
 	
 loop(N,L,StartTime) when N > 0 ->
 	receive
-		{Pid,Msg,N} ->
-			io:format("Time for Loop: ~w~n", [timeinsecs(StartTime)]),
-			CL = lists:append(L,[{Msg,N}])
+		{Pid,Msg,I} ->
+			CL = lists:append(L,[{Msg,I}])
 	end,
 Pid ! stop,
 loop(N-1,CL,StartTime);
