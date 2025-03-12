@@ -8,13 +8,15 @@
 
 matrixmult(L1,L2,NoProcesses) ->
 	StartTime = erlang:timestamp(),
-	farm:farm(L1,fun(X) -> apply(matmult,matdot,[X,transpose(L2)]) end,NoProcesses).
-	%matdot(L1,transpose(L2)).
-	%io:format("Time to complete multiplication: ~w~n", [timeinsecs(StartTime)]).
+	A = farm:farm(L1,fun(X) -> apply(matmult,matdot,[X,transpose(L2)]) end,NoProcesses),
+	io:format("Time to complete multiplication: ~w~n", [timeinsecs(StartTime)]),
+	A.
 
 matrixmult(L1,L2) ->
 	StartTime = erlang:timestamp(),
-	matdot(L1,transpose(L2)).
+	A = matdot(L1,transpose(L2)),
+	io:format("Time to complete multiplication: ~w~n", [timeinsecs(StartTime)]),
+	A.
 
 timeinsecs(StartTime) ->
 	timer:now_diff(erlang:timestamp(),StartTime)/(1*math:pow(10,6)).

@@ -6,8 +6,9 @@
 
 matrixmult(L1,L2) ->	
 	StartTime = erlang:timestamp(),
-	matdot(L1,transpose(L2)).
-	%io:format("Time to complete multiplication: ~w~n", [timeinsecs(StartTime)]).
+	A = matdot(L1,transpose(L2)),
+	io:format("Time to complete multiplication: ~w~n", [timeinsecs(StartTime)]),
+	A.
 
 timeinsecs(StartTime) ->
 	timer:now_diff(erlang:timestamp(),StartTime)/(1*math:pow(10,6)).
