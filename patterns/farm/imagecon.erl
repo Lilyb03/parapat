@@ -2,6 +2,7 @@
 -export([blur/1,file_r/1,blur/2]).
 -export([splitWork/2]).
 -export([doWork/3]).
+-export([multiblur/2]).
 -import(gauss,[gauss2D/3]).
 -import(proplists,[get_value/2]).
 
@@ -43,7 +44,7 @@ blur(Filename) ->
 
 	FinalImage = <<FileHeader/binary,DIBHeader/binary,NewData/binary>>,
 	
-	file:write_file("blur.bmp", FinalImage),
+	file:write_file(Filename ++ "_blur.bmp", FinalImage),
 	io:format("Time to complete convolution: ~w~n", [timeinsecs(StartTime)]).
 	
 	%pixelsToList([],PixelData,trunc(Bitspp/8),Width,Height).
@@ -60,8 +61,12 @@ blur(Filename,NoProcesses) ->
 
 	FinalImage = <<FileHeader/binary,DIBHeader/binary,NewData/binary>>,
 	
-	file:write_file("blur.bmp", FinalImage).
+	file:write_file((Filename --".bmp") ++ "_blur.bmp", FinalImage),
 	
+	[].
+	
+multiblur(FileNames,NoProcesses) ->
+	farm:farm(FileNames,fun(X) -> apply(imagecon,blur,[X,4]) end,NoProcesses).
 	
 doWork(ImageData,Work,I) ->
 			Width = get_value("Width",ImageData),
@@ -124,15 +129,20 @@ pixelsLoop(L,X,Y,Pixels,Bytespp,Width,Height,Range,NumberOfPixels,Count) when Co
 	pixelsLoop(listadd(L,applyGaussianFunc(Data,trunc((((Count rem (Range*2 + 1)) - Range) * SignX)),
 	trunc(((((math:floor(Count/(Range*2 + 1))) - Range)) * SignY)), (Range*2+1)/3)), X,Y,Pixels,Bytespp,Width,Height,Range,NumberOfPixels,Count+1);
 pixelsLoop(L,_,_,_,_,_,_,_,_,_) ->
-	list_to_binary(L).
+	list_to_binary(trunclist(L)).
 	
 applyGaussianFunc(Bin,X,Y,Sigma) ->
 	L = binary_to_list(Bin),
 	applyGauss(L,X,Y,Sigma).
 
 applyGauss([H|T],X,Y,Sigma) ->
-	[trunc(gauss2D(Sigma,X,Y) * H)|applyGauss(T,X,Y,Sigma)];
+	[gauss2D(Sigma,X,Y) * H|applyGauss(T,X,Y,Sigma)];
 applyGauss([],_,_,_) ->
+	[].
+
+trunclist([H|T]) ->
+	[trunc(H)|trunclist(T)];
+trunclist([]) ->
 	[].
 
 listadd([HA|TA],[HB|TB]) ->
